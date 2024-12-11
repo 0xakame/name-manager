@@ -43,10 +43,7 @@ contract NameManager is Ownable {
     event ReNewed(address owner, string name, uint256 expiresAt);
 
     modifier onePerBlock() {
-        require(
-            blockNo[msg.sender] < block.number,
-            "can not run in same block"
-        );
+        require(blockNo[msg.sender] < block.number, "can not run in same block");
         blockNo[msg.sender] = block.number;
         _;
     }
@@ -82,24 +79,14 @@ contract NameManager is Ownable {
      * @param nonce random number to secure hash
      * @param name name, length must have 3 or more characters
      */
-    function reveal(
-        uint256 nonce,
-        string memory name
-    ) public payable onePerBlock restrictGas {
+    function reveal(uint256 nonce, string memory name) public payable onePerBlock restrictGas {
         require(bytes(name).length > 2, "name too short");
 
         bytes32 d = digest(nonce, name, msg.sender);
         require(commits[msg.sender] == d, "invalid data");
-        require(
-            registered[name] == address(0) ||
-                expiresAt[name] <= block.timestamp,
-            "already registered"
-        );
+        require(registered[name] == address(0) || expiresAt[name] <= block.timestamp, "already registered");
         uint256 fee = bytes(name).length * PRICE_PER_CHAR;
-        require(
-            msg.value == (fee + LOCK_AMOUNT),
-            "insufficient fee and lock amount"
-        );
+        require(msg.value == (fee + LOCK_AMOUNT), "insufficient fee and lock amount");
 
         if (registered[name] != address(0)) {
             names[registered[name]] = "";
@@ -127,8 +114,7 @@ contract NameManager is Ownable {
      */
     function renew(string memory name) public {
         require(
-            registered[name] == msg.sender && expiresAt[name] > block.timestamp,
-            "not registered or already expired"
+            registered[name] == msg.sender && expiresAt[name] > block.timestamp, "not registered or already expired"
         );
         expiresAt[name] = block.timestamp + LOCK_PERIOD;
 
@@ -143,11 +129,7 @@ contract NameManager is Ownable {
      * @param sender user address
      * @return bytes32 generated hash
      */
-    function digest(
-        uint256 nonce,
-        string memory name,
-        address sender
-    ) public pure returns (bytes32) {
+    function digest(uint256 nonce, string memory name, address sender) public pure returns (bytes32) {
         return keccak256(abi.encodePacked(nonce, name, sender));
     }
 
